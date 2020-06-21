@@ -38,6 +38,7 @@ namespace Test
         protected override void OnClosed(EventArgs e)
         {
             base.OnClosed(e);
+            network.SaveNetwork(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\network.xml");
         }
 
         private void Timer_Tick(object sender, EventArgs e)
@@ -87,10 +88,7 @@ namespace Test
         private void btnStart_Click(object sender, EventArgs e)
         {
             if (timer.Enabled)
-            {
                 timer.Stop();
-                network.SaveNetwork(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\network.xml");
-            }
             else
                 timer.Start();
         }

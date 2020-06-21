@@ -64,12 +64,8 @@ namespace DeepLearningBase.Utils
         {
             Vector product = new Vector(m.Height);
             for (int y = 0; y < m.Height; y++)
-            {
                 for (int x = 0; x < m.Width; x++)
-                {
                     product[y] += v[x] * m[x, y];
-                }
-            }
             return product;
         }
 

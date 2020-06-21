@@ -35,11 +35,8 @@ namespace DeepLearningBase
             this.Weights.ForEach(x => ((float)random.NextDouble() * 2 - 1));
         }
 
-        public Vector GetOutput(Vector activation)
-        {
-            return (Weights * (this.Activation = activation)).ForEach(MathUtils.Sigmoid);
-        }
-
+        public Vector GetOutput(Vector activation) => (Weights * (this.Activation = activation)).ForEach(MathUtils.Sigmoid);
+        
         public Vector Backprop(Vector error)
         {
             Vector activation = Weights * this.Activation + Biases;
