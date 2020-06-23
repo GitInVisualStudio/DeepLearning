@@ -44,7 +44,7 @@ namespace DeepLearningBase
         
         public Vector GetDerivError(Vector error) => (Weights * this.Activation + Biases).ForEach(MathUtils.DerivativeSigmoid) * error;
 
-        public Vector GetDerivBiases(Vector error) => error * Network.LEARNING_RATE;
+        public Vector GetDerivBiases(Vector error) => error;
 
         public Matrix GetDerivWeights(Vector error)
         {

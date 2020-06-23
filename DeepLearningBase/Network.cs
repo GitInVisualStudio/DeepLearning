@@ -7,14 +7,22 @@ using System.Net.Security;
 using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
+using System.Xml.Serialization;
 
 namespace DeepLearningBase
 {
     [Serializable]
     public class Network
     {
+        [NonSerialized]
+        private Dictionary<Vector, Vector> trainingData;
         private Layer[] layer;
         public Layer[] Layer { get => layer; set => layer = value; }
+        public event EventHandler<float> OnChange;
+
+        [XmlIgnore]
+        public Dictionary<Vector, Vector> TrainingData { get => trainingData; set => trainingData = value; }
+
         public static float LEARNING_RATE = 0.1f;
 
         public Layer this[int index]
@@ -77,21 +85,34 @@ namespace DeepLearningBase
             return var1;
         }
 
+        private int GetOutputIndex_(Vector output)
+        {
+            int var1 = -1;
+            for (int i = 0; i < output.Dimensions; i++)
+                if (var1 == -1 || output[i] > output[var1])
+                    var1 = i;
+            return var1;
+        }
+
         public void SaveNetwork(string path) => ResourceManager.Serialize(this, path);
 
-        public void BackpropBatch(Dictionary<Vector, Vector> batch)
+        public float BackpropBatch(Dictionary<Vector, Vector> batch, Track track)
         {
+            float var1 = 0;
             List<object[]> sum = new List<object[]>();
             Parallel.ForEach(batch.Keys, (Vector input) =>
             {
                 Vector output = batch[input];
-                object[] obj = Backprop(input, output);
+                object[] obj = Backprop(input, output, track);
                 lock (sum)
+                {
                     sum.Add(obj);
+                    var1 += (float)obj[layer.Length];
+                }
             });
 
             if (sum.Count <= 0)
-                return;
+                return -1;
 
             for (int k = 0; k < layer.Length; k++)
             {
@@ -105,16 +126,33 @@ namespace DeepLearningBase
                     deriv_biases += (Vector)v[1];
                 });
                 Layer layer = this[k];
-                layer.Biases -= deriv_biases / sum.Count;
-                layer.Weights -= deriv_weights / sum.Count;
+                layer.Biases -= deriv_biases * LEARNING_RATE;
+                layer.Weights -= deriv_weights * LEARNING_RATE;
             }
+            return var1 / sum.Count;
         }
 
-        public object[] Backprop(Vector input, Vector output)
+        public object[] Backprop(Vector input, Vector output, Track track)
         {
-            Vector error = GetOutput(input) - output;
+            input = GetOutput(input);
+            int index = GetOutputIndex_(input);
+            Vector error = input - output;
             error *= 2;
-            object[] values = new object[Layer.Length];
+            object[] values = new object[Layer.Length + 1];
+
+            switch (track)
+            {
+                case Track.ACC:
+                    values[Layer.Length] = output[index];
+                    break;
+                case Track.LOSS:
+                    values[Layer.Length] = (error * error).Sum();
+                    break;
+                case Track.NONE:
+                    values[layer.Length] = 0;
+                    break;
+            }
+
             for (int i = Layer.Length - 1; i >= 0; i--)
             {
                 Layer layer = this[i];
@@ -144,6 +182,71 @@ namespace DeepLearningBase
                 loss += GetError(input, output).Sum();
             }
             return loss / batch.Count;
+        }
+
+        public void Train(Track track, Optimizer optimizer, int epochs = 1)
+        {
+            for (int i = 0; i < epochs; i++)
+            {
+                switch (optimizer)
+                {
+                    case Optimizer.GradientDescent:
+                        OnChange?.Invoke(this, BackpropBatch(trainingData, track));
+                        break;
+                    case Optimizer.MiniBatchGradientDescent:
+                        float var1 = 0;
+                        int runs = 0;
+                        for (int index = 0; index < trainingData.Count; index += 100)
+                        {
+                            Dictionary<Vector, Vector> batch = GetNextBatch(index, 100);
+                            float value = BackpropBatch(batch, track);
+                            var1 += value;
+                            runs++;
+                            OnChange?.Invoke(this, var1 / (float)runs);
+                        }
+                        break;
+                    case Optimizer.StochasticGradientDescent:
+                        foreach(Vector input in trainingData.Keys)
+                        {
+                            object[] obj = Backprop(input, trainingData[input], track);
+                            for(int k = 0; k < Layer.Length; k++)
+                            {
+                                Matrix deriv_weights = (Matrix)obj[0];
+                                Vector deriv_biases = (Vector)obj[1];
+                                this[k].Biases -= deriv_biases * LEARNING_RATE;
+                                this[k].Weights -= deriv_weights * LEARNING_RATE;
+                            }
+                        }
+                        break;
+                }
+            }
+        }
+
+        private Dictionary<Vector, Vector> GetNextBatch(int index, int size)
+        {
+            Dictionary<Vector, Vector> batch = new Dictionary<Vector, Vector>();
+            for (int i = 0; i < size; i++)
+            {
+                if (i + index >= trainingData.Count)
+                    break;
+                KeyValuePair<Vector, Vector> pair = trainingData.ElementAt(i + index);
+                batch.Add(pair.Key, pair.Value);
+            }
+            return batch;
+        }
+
+        public enum Track : int
+        {
+            ACC = 0,
+            LOSS = 1,
+            NONE = 2
+        }
+
+        public enum Optimizer : int
+        {
+            MiniBatchGradientDescent = 0,
+            StochasticGradientDescent = 1,
+            GradientDescent = 2
         }
     }
 }

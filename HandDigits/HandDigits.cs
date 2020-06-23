@@ -50,37 +50,27 @@ namespace HandDigits
 
         private void Canvas_OnChange(object sender, Vector e)
         {
-            lbl.Text = GetPrediction(e).ToString();
-        }
-
-        private int GetPrediction(Vector input)
-        {
-            Vector output = network.GetOutput(input);
-            int var1 = -1;
-            for (int i = 0; i < output.Dimensions; i++)
-                if (var1 == -1 || output[i] > output[var1])
-                    var1 = i;
-            return var1;
+            //lbl.Text = GetPrediction(e).ToString();
         }
 
         private void Timer_Tick(object sender, EventArgs e)
         {
-            network.BackpropBatch(trainingData);
+            //network.BackpropBatch(trainingData);
 
-            float acc = 0;
-            int right = 0;
-            int tested = 0;
-            foreach (Vector input in trainingData.Keys)
-            {
-                Vector output = trainingData[input];
-                int index = network.GetOutputIndex(input);
-                tested++;
-                if (output[index] == 1)
-                    right++;
-                acc = (float)right / (float)tested;
-            }
-            chart.Series["Acc"].Points.AddY(acc);
-            chart.Series["Error"].Points.AddY(network.GetAverageLoss(trainingData));
+            //float acc = 0;
+            //int right = 0;
+            //int tested = 0;
+            //foreach (Vector input in trainingData.Keys)
+            //{
+            //    Vector output = trainingData[input];
+            //    int index = network.GetOutputIndex(input);
+            //    tested++;
+            //    if (output[index] == 1)
+            //        right++;
+            //    acc = (float)right / (float)tested;
+            //}
+            //chart.Series["Acc"].Points.AddY(acc);
+            //chart.Series["Error"].Points.AddY(network.GetAverageLoss(trainingData));
         }
 
         private void btnReset_Click(object sender, EventArgs e) => canvas.Reset();
