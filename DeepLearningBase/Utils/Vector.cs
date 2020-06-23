@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace DeepLearningBase.Utils
@@ -44,6 +45,9 @@ namespace DeepLearningBase.Utils
         }
 
         public float[] Values { get => values; set => values = value; }
+
+        public float X => values[0];
+        public float Y => values[1];
 
         public void Normalize() => this /= Length;
 
@@ -108,7 +112,7 @@ namespace DeepLearningBase.Utils
         public override string ToString()
         {
             string output = "";
-            for(int i = 0; i < Dimensions; i++)
+            for (int i = 0; i < Dimensions; i++)
                 output += $" d_{i}: " + this[i];
             return output;
         }

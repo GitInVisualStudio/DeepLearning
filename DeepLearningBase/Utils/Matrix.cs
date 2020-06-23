@@ -93,6 +93,14 @@ namespace DeepLearningBase.Utils
             return m1;
         }
 
+        public static Matrix operator /(Matrix m1, float value)
+        {
+            for (int x = 0; x < m1.Width; x++)
+                for (int y = 0; y < m1.Height; y++)
+                    m1[x, y] /= value;
+            return m1;
+        }
+
         public Matrix ForEach(Func<float, float> func)
         {
             for (int x = 0; x < Width; x++)
