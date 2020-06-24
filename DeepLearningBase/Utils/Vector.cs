@@ -70,6 +70,8 @@ namespace DeepLearningBase.Utils
 
         public static Vector operator +(Vector v1, Vector v2)
         {
+            if (v1.Equals(default(Vector)))
+                v1 = new Vector(v2.Dimensions);
             for (int i = 0; i < v1.Dimensions; i++)
                 v1[i] += v2[i];
             return v1;

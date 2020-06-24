@@ -18,10 +18,11 @@ namespace DeepLearningBase
         private Dictionary<Vector, Vector> trainingData;
         private Layer[] layer;
         public Layer[] Layer { get => layer; set => layer = value; }
-        public event EventHandler<float> OnChange;
-
+        private Matrix[] deriv_weights;
+        private Vector[] deriv_biases;
         [XmlIgnore]
         public Dictionary<Vector, Vector> TrainingData { get => trainingData; set => trainingData = value; }
+        public event EventHandler<float> OnChange;
 
         public static float LEARNING_RATE = 0.1f;
 
@@ -42,6 +43,8 @@ namespace DeepLearningBase
             this.Layer = new Layer[layer.Length - 1];
             for(int i = 0; i < layer.Length - 1; i++)
                 this.Layer[i] = new Layer(layer[i], layer[i + 1]);
+            deriv_biases = new Vector[layer.Length];
+            deriv_weights= new Matrix[layer.Length];
         }
 
         public Network(float learning_rate, int[] layer, int seed = 0)
@@ -50,12 +53,16 @@ namespace DeepLearningBase
             this.Layer = new Layer[layer.Length - 1];
             for (int i = 0; i < layer.Length - 1; i++)
                 this.Layer[i] = new Layer(layer[i], layer[i + 1], seed);
+            deriv_biases = new Vector[layer.Length];
+            deriv_weights = new Matrix[layer.Length];
         }
 
         public Network(string path)
         {
             Network network = ResourceManager.Deserialize<Network>(path);
             this.Layer = network.Layer;
+            deriv_biases = new Vector[layer.Length];
+            deriv_weights = new Matrix[layer.Length];
         }
 
         /// <summary>
@@ -98,61 +105,40 @@ namespace DeepLearningBase
 
         public float BackpropBatch(Dictionary<Vector, Vector> batch, Track track)
         {
-            float var1 = 0;
-            List<object[]> sum = new List<object[]>();
+            float sum = 0;
+            object sumLocker = new object();
             Parallel.ForEach(batch.Keys, (Vector input) =>
             {
                 Vector output = batch[input];
-                object[] obj = Backprop(input, output, track);
-                lock (sum)
-                {
-                    sum.Add(obj);
-                    var1 += (float)obj[layer.Length];
-                }
+                var (acc, _) = Backprop(input, output);
+                lock (sumLocker) //no im not stupid
+                    sum += acc;
             });
 
-            if (sum.Count <= 0)
-                return -1;
+            AddDeriv();
 
-            for (int k = 0; k < layer.Length; k++)
-            {
-                object[] values = (object[])sum[0][k];
-                Matrix deriv_weights = (Matrix)values[0];
-                Vector deriv_biases = (Vector)values[1];
-                Parallel.For(1, sum.Count, (int i) =>
-                {
-                    object[] v = (object[])sum[i][k];
-                    deriv_weights += (Matrix)v[0];
-                    deriv_biases += (Vector)v[1];
-                });
-                Layer layer = this[k];
-                layer.Biases -= deriv_biases * LEARNING_RATE;
-                layer.Weights -= deriv_weights * LEARNING_RATE;
-            }
-            return var1 / sum.Count;
+            return sum / batch.Keys.Count;
         }
 
-        public object[] Backprop(Vector input, Vector output, Track track)
+        private void AddDeriv()
+        {
+            Parallel.For(0, layer.Length, (int k) =>
+            {
+                Layer layer = this[k];
+                layer.Biases -= deriv_biases[k] * LEARNING_RATE;
+                layer.Weights -= deriv_weights[k] * LEARNING_RATE;
+                deriv_biases[k] = default;
+                deriv_weights[k] = default;
+            });
+        }
+
+        public (float, float) Backprop(Vector input, Vector output)
         {
             input = GetOutput(input);
             int index = GetOutputIndex_(input);
             Vector error = input - output;
             error *= 2;
-            object[] values = new object[Layer.Length + 1];
-
-            switch (track)
-            {
-                case Track.ACC:
-                    values[Layer.Length] = output[index];
-                    break;
-                case Track.LOSS:
-                    values[Layer.Length] = (error * error).Sum();
-                    break;
-                case Track.NONE:
-                    values[layer.Length] = 0;
-                    break;
-            }
-
+            
             for (int i = Layer.Length - 1; i >= 0; i--)
             {
                 Layer layer = this[i];
@@ -161,10 +147,13 @@ namespace DeepLearningBase
                 Vector biases = layer.GetDerivBiases(error);
                 Vector activation = layer.GetDerivActivation(error);
 
-                values[i] = new object[] { weights, biases };
+                deriv_weights[i] += weights;
+                deriv_biases[i] += biases;
+
                 error = activation;
             }
-            return values;
+
+            return (output[index], (error * error).Sum());
         }
 
         public Vector GetError(Vector input, Vector output)
@@ -202,27 +191,21 @@ namespace DeepLearningBase
                             float value = BackpropBatch(batch, track);
                             var1 += value;
                             runs++;
-                            OnChange?.Invoke(this, var1 / (float)runs);
+                            OnChange?.Invoke(this, var1/(float)runs);
                         }
                         break;
                     case Optimizer.StochasticGradientDescent:
-                        foreach(Vector input in trainingData.Keys)
+                        foreach (Vector input in trainingData.Keys)
                         {
-                            object[] obj = Backprop(input, trainingData[input], track);
-                            for(int k = 0; k < Layer.Length; k++)
-                            {
-                                Matrix deriv_weights = (Matrix)obj[0];
-                                Vector deriv_biases = (Vector)obj[1];
-                                this[k].Biases -= deriv_biases * LEARNING_RATE;
-                                this[k].Weights -= deriv_weights * LEARNING_RATE;
-                            }
+                            var (acc, los) = Backprop(input, trainingData[input]);
+                            AddDeriv();
                         }
                         break;
                 }
             }
         }
 
-        private Dictionary<Vector, Vector> GetNextBatch(int index, int size)
+        public Dictionary<Vector, Vector> GetNextBatch(int index, int size)
         {
             Dictionary<Vector, Vector> batch = new Dictionary<Vector, Vector>();
             for (int i = 0; i < size; i++)

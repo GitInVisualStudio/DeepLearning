@@ -79,6 +79,8 @@ namespace DeepLearningBase.Utils
 
         public static Matrix operator +(Matrix m1, Matrix m2)
         {
+            if (m1.Equals(default(Matrix)))
+                m1 = new Matrix(m2.Width, m2.Height);
             for (int x = 0; x < m1.Width; x++)
                 for (int y = 0; y < m1.Height; y++)
                     m1[x, y] += m2[x, y];

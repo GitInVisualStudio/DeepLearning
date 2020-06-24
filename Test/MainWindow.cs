@@ -31,7 +31,7 @@ namespace Test
 
             data = Regex.Split(Resources.train, "\n");
             trainingData = new Dictionary<Vector, Vector>();
-            List<Image> images = LoadImages(0, 55000);
+            List<Image> images = LoadImages(0, 1000);
             foreach (Image image in images)
             {
                 if (image == null)
@@ -83,29 +83,25 @@ namespace Test
 
         private void btnStart_Click(object sender, EventArgs e)
         {
-            new Thread(() =>
-            {
-                network.Train(Network.Track.ACC, Network.Optimizer.MiniBatchGradientDescent, 3);
-        }).Start();
-    }
+            network.Train(Network.Track.ACC, Network.Optimizer.MiniBatchGradientDescent, 3);
+        }
 
         private void Test_Click(object sender, EventArgs e)
         {
-            //timer.Stop();
-            //Dictionary<Vector, Vector> batch = GetNextBatch();
-            //float acc = 0;
-            //int right = 0;
-            //int tested = 0;
-            //foreach(Vector input in batch.Keys)
-            //{
-            //    Vector output = batch[input];
-            //    int index = network.GetOutputIndex(input);
-            //    tested++;
-            //    if (output[index] == 1)
-            //        right++;
-            //    acc = (float)right / (float)tested;
-            //}
-            //lblAcc.Text = acc.ToString();
+            Dictionary<Vector, Vector> batch = network.GetNextBatch(0, 100);
+            float acc = 0;
+            int right = 0;
+            int tested = 0;
+            foreach (Vector input in batch.Keys)
+            {
+                Vector output = batch[input];
+                int index = network.GetOutputIndex(input);
+                tested++;
+                if (output[index] == 1)
+                    right++;
+                acc = (float)right / (float)tested;
+            }
+            lblAcc.Text = acc.ToString();
         }
 
         private void btnOpen_Click(object sender, EventArgs e)
