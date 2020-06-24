@@ -31,7 +31,7 @@ namespace Test
 
             data = Regex.Split(Resources.train, "\n");
             trainingData = new Dictionary<Vector, Vector>();
-            List<Image> images = LoadImages(0, 1000);
+            List<Image> images = LoadImages(0, 55000);
             foreach (Image image in images)
             {
                 if (image == null)
@@ -41,15 +41,13 @@ namespace Test
                 trainingData.Add(image.Vector, output);
             }
 
-            network = new Network(0.1f, new int[] { IMG_SIZE * IMG_SIZE, 16, 16, 10 });
-
+            network = new Network(0.1f, new int[] { IMG_SIZE * IMG_SIZE, 128, 128, 10 });
             network.TrainingData = trainingData;
             network.OnChange += Network_OnBatch;
         }
 
         private void Network_OnBatch(object sender, float e)
         {
-            Console.WriteLine(e);
             chart.Series["Accuracy"].Points.AddY(e);
         }
 
@@ -57,6 +55,7 @@ namespace Test
         {
             base.OnClosed(e);
             network.SaveNetwork(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\network.xml");
+            network.SaveTrainingData(Environment.GetFolderPath(Environment.SpecialFolder.Desktop) + "\\training_data.xml");
         }
 
         private List<Image> LoadImages(int index, int length)
@@ -83,7 +82,7 @@ namespace Test
 
         private void btnStart_Click(object sender, EventArgs e)
         {
-            network.Train(Network.Track.ACC, Network.Optimizer.MiniBatchGradientDescent, 3);
+            network.Train(Network.Track.ACC, Network.Optimizer.MiniBatchGradientDescent, (int)nudEpochs.Value, (int)nudBatch.Value);
         }
 
         private void Test_Click(object sender, EventArgs e)
@@ -102,6 +101,7 @@ namespace Test
                 acc = (float)right / (float)tested;
             }
             lblAcc.Text = acc.ToString();
+            this.Refresh();
         }
 
         private void btnOpen_Click(object sender, EventArgs e)

@@ -20,11 +20,11 @@ namespace DeepLearningBase
         public Layer[] Layer { get => layer; set => layer = value; }
         private Matrix[] deriv_weights;
         private Vector[] deriv_biases;
+        public event EventHandler<float> OnChange;
+        private float learning_rate;
+
         [XmlIgnore]
         public Dictionary<Vector, Vector> TrainingData { get => trainingData; set => trainingData = value; }
-        public event EventHandler<float> OnChange;
-
-        public static float LEARNING_RATE = 0.1f;
 
         public Layer this[int index]
         {
@@ -49,7 +49,7 @@ namespace DeepLearningBase
 
         public Network(float learning_rate, int[] layer, int seed = 0)
         {
-            LEARNING_RATE = learning_rate;
+            this.learning_rate = learning_rate;
             this.Layer = new Layer[layer.Length - 1];
             for (int i = 0; i < layer.Length - 1; i++)
                 this.Layer[i] = new Layer(layer[i], layer[i + 1], seed);
@@ -117,7 +117,7 @@ namespace DeepLearningBase
 
             AddDeriv();
 
-            return sum / batch.Keys.Count;
+            return sum / (float)batch.Keys.Count;
         }
 
         private void AddDeriv()
@@ -125,8 +125,8 @@ namespace DeepLearningBase
             Parallel.For(0, layer.Length, (int k) =>
             {
                 Layer layer = this[k];
-                layer.Biases -= deriv_biases[k] * LEARNING_RATE;
-                layer.Weights -= deriv_weights[k] * LEARNING_RATE;
+                layer.Biases -= deriv_biases[k] * learning_rate;
+                layer.Weights -= deriv_weights[k] * learning_rate;
                 deriv_biases[k] = default;
                 deriv_weights[k] = default;
             });
@@ -173,10 +173,16 @@ namespace DeepLearningBase
             return loss / batch.Count;
         }
 
-        public void Train(Track track, Optimizer optimizer, int epochs = 1)
+        private void SetLearningRate(int epoch)
+        {           
+            learning_rate = (1 / (float)(2 + 1 * epoch)) * 0.2f;
+        }
+
+        public void Train(Track track, Optimizer optimizer, int epochs = 1, int batch_size = 100)
         {
             for (int i = 0; i < epochs; i++)
             {
+                SetLearningRate(i);
                 switch (optimizer)
                 {
                     case Optimizer.GradientDescent:
@@ -185,9 +191,9 @@ namespace DeepLearningBase
                     case Optimizer.MiniBatchGradientDescent:
                         float var1 = 0;
                         int runs = 0;
-                        for (int index = 0; index < trainingData.Count; index += 100)
+                        for (int index = 0; index < trainingData.Count; index += batch_size)
                         {
-                            Dictionary<Vector, Vector> batch = GetNextBatch(index, 100);
+                            Dictionary<Vector, Vector> batch = GetNextBatch(index, batch_size);
                             float value = BackpropBatch(batch, track);
                             var1 += value;
                             runs++;
@@ -217,6 +223,10 @@ namespace DeepLearningBase
             }
             return batch;
         }
+
+        public void LoadTrainingData(string path) => this.trainingData = ResourceManager.Deserialize<TrainingData>(path).GetTrainingData();        
+
+        public void SaveTrainingData(string path) => ResourceManager.Serialize(new TrainingData(this), path);
 
         public enum Track : int
         {

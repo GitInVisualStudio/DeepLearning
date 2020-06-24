@@ -43,34 +43,13 @@ namespace HandDigits
             {
                 Interval = 1
             };
-            timer.Tick += Timer_Tick;
 
             trainingData = new Dictionary<Vector, Vector>();
         }
 
         private void Canvas_OnChange(object sender, Vector e)
         {
-            //lbl.Text = GetPrediction(e).ToString();
-        }
-
-        private void Timer_Tick(object sender, EventArgs e)
-        {
-            //network.BackpropBatch(trainingData);
-
-            //float acc = 0;
-            //int right = 0;
-            //int tested = 0;
-            //foreach (Vector input in trainingData.Keys)
-            //{
-            //    Vector output = trainingData[input];
-            //    int index = network.GetOutputIndex(input);
-            //    tested++;
-            //    if (output[index] == 1)
-            //        right++;
-            //    acc = (float)right / (float)tested;
-            //}
-            //chart.Series["Acc"].Points.AddY(acc);
-            //chart.Series["Error"].Points.AddY(network.GetAverageLoss(trainingData));
+            lbl.Text = network.GetOutputIndex(e).ToString();
         }
 
         private void btnReset_Click(object sender, EventArgs e) => canvas.Reset();
@@ -154,7 +133,19 @@ namespace HandDigits
                 DataStruct var1 = ResourceManager.Deserialize<DataStruct>(dialog.FileName);
                 this.trainingData = var1.GetTrainingData();
                 this.network = var1.Network;
-                Network.LEARNING_RATE = 0.01f;
+                this.Refresh();
+            }
+        }
+
+        private void btnOpenNetwork_Click(object sender, EventArgs e)
+        {
+            using (FileDialog dialog = new OpenFileDialog())
+            {
+                dialog.Filter = "xml files (*.xml)|*.xml|All files (*.*)|*.*";
+                dialog.InitialDirectory = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                if (dialog.ShowDialog() == DialogResult.Cancel)
+                    return;
+                this.network = new Network(dialog.FileName);
                 this.Refresh();
             }
         }

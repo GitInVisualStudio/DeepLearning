@@ -38,7 +38,13 @@
             this.label1 = new System.Windows.Forms.Label();
             this.lblAcc = new System.Windows.Forms.Label();
             this.btnOpen = new System.Windows.Forms.Button();
+            this.nudBatch = new System.Windows.Forms.NumericUpDown();
+            this.label2 = new System.Windows.Forms.Label();
+            this.label3 = new System.Windows.Forms.Label();
+            this.nudEpochs = new System.Windows.Forms.NumericUpDown();
             ((System.ComponentModel.ISupportInitialize)(this.chart)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudBatch)).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudEpochs)).BeginInit();
             this.SuspendLayout();
             // 
             // chart
@@ -111,11 +117,57 @@
             this.btnOpen.UseVisualStyleBackColor = true;
             this.btnOpen.Click += new System.EventHandler(this.btnOpen_Click);
             // 
+            // nudBatch
+            // 
+            this.nudBatch.Location = new System.Drawing.Point(693, 366);
+            this.nudBatch.Maximum = new decimal(new int[] {
+            1000,
+            0,
+            0,
+            0});
+            this.nudBatch.Name = "nudBatch";
+            this.nudBatch.Size = new System.Drawing.Size(95, 20);
+            this.nudBatch.TabIndex = 6;
+            // 
+            // label2
+            // 
+            this.label2.AutoSize = true;
+            this.label2.Location = new System.Drawing.Point(629, 368);
+            this.label2.Name = "label2";
+            this.label2.Size = new System.Drawing.Size(59, 13);
+            this.label2.TabIndex = 7;
+            this.label2.Text = "Batch size:";
+            // 
+            // label3
+            // 
+            this.label3.AutoSize = true;
+            this.label3.Location = new System.Drawing.Point(629, 394);
+            this.label3.Name = "label3";
+            this.label3.Size = new System.Drawing.Size(46, 13);
+            this.label3.TabIndex = 9;
+            this.label3.Text = "Epochs:";
+            // 
+            // nudEpochs
+            // 
+            this.nudEpochs.Location = new System.Drawing.Point(693, 392);
+            this.nudEpochs.Maximum = new decimal(new int[] {
+            10,
+            0,
+            0,
+            0});
+            this.nudEpochs.Name = "nudEpochs";
+            this.nudEpochs.Size = new System.Drawing.Size(95, 20);
+            this.nudEpochs.TabIndex = 8;
+            // 
             // MainWindow
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(800, 505);
+            this.Controls.Add(this.label3);
+            this.Controls.Add(this.nudEpochs);
+            this.Controls.Add(this.label2);
+            this.Controls.Add(this.nudBatch);
             this.Controls.Add(this.btnOpen);
             this.Controls.Add(this.lblAcc);
             this.Controls.Add(this.label1);
@@ -125,6 +177,8 @@
             this.Name = "MainWindow";
             this.Text = "Form1";
             ((System.ComponentModel.ISupportInitialize)(this.chart)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudBatch)).EndInit();
+            ((System.ComponentModel.ISupportInitialize)(this.nudEpochs)).EndInit();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -138,6 +192,10 @@
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Label lblAcc;
         private System.Windows.Forms.Button btnOpen;
+        private System.Windows.Forms.NumericUpDown nudBatch;
+        private System.Windows.Forms.Label label2;
+        private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.NumericUpDown nudEpochs;
     }
 }
 

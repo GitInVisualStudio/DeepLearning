@@ -46,6 +46,7 @@ namespace HandDigits
             this.label1 = new System.Windows.Forms.Label();
             this.btnSave = new System.Windows.Forms.Button();
             this.btnOpen = new System.Windows.Forms.Button();
+            this.btnOpenNetwork = new System.Windows.Forms.Button();
             ((System.ComponentModel.ISupportInitialize)(this.nudLabel)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.chart)).BeginInit();
             this.SuspendLayout();
@@ -170,11 +171,22 @@ namespace HandDigits
             this.btnOpen.UseVisualStyleBackColor = true;
             this.btnOpen.Click += new System.EventHandler(this.btnOpen_Click);
             // 
+            // btnOpenNetwork
+            // 
+            this.btnOpenNetwork.Location = new System.Drawing.Point(221, 212);
+            this.btnOpenNetwork.Name = "btnOpenNetwork";
+            this.btnOpenNetwork.Size = new System.Drawing.Size(151, 23);
+            this.btnOpenNetwork.TabIndex = 12;
+            this.btnOpenNetwork.Text = "Open Network";
+            this.btnOpenNetwork.UseVisualStyleBackColor = true;
+            this.btnOpenNetwork.Click += new System.EventHandler(this.btnOpenNetwork_Click);
+            // 
             // HandDigits
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(1030, 450);
+            this.Controls.Add(this.btnOpenNetwork);
             this.Controls.Add(this.btnOpen);
             this.Controls.Add(this.btnSave);
             this.Controls.Add(this.label1);
@@ -208,6 +220,7 @@ namespace HandDigits
         private System.Windows.Forms.Label label1;
         private System.Windows.Forms.Button btnSave;
         private System.Windows.Forms.Button btnOpen;
+        private System.Windows.Forms.Button btnOpenNetwork;
     }
 }
 
